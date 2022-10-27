@@ -28,26 +28,38 @@ func setupLogFile() {
 }
 
 func main() {
-	server := gin.New()
 	setupLogFile()
+	server := gin.New()
+
+	server.Static("/css", "./views/templates/css")
+	server.LoadHTMLGlob("./views/templates/*.html")
+
 	server.Use(gin.Recovery(),
 		middlewares.Logger(),
 		middlewares.BasicAuth(),
 		gindump.Dump())
 
-	server.GET("/videos", func(ctx *gin.Context) {
-		ctx.JSON(200, videoController.GetAll())
-	})
+	apiRoutes := server.Group("/api")
+	{
+		apiRoutes.GET("/videos", func(ctx *gin.Context) {
+			ctx.JSON(200, videoController.GetAll())
+		})
 
-	server.POST("/videos", func(ctx *gin.Context) {
-		err := videoController.Save(ctx)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
+		apiRoutes.POST("/videos", func(ctx *gin.Context) {
+			err := videoController.Save(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
 
-		ctx.JSON(http.StatusOK, gin.H{"message": "Saved successfully."})
+			ctx.JSON(http.StatusOK, gin.H{"message": "Saved successfully."})
 
-	})
+		})
+	}
+
+	viewRoutes := server.Group("/view")
+	{
+		viewRoutes.GET("/videos", videoController.ShowAll)
+	}
 	server.Run(":8080")
 }

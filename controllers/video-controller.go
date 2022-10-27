@@ -4,6 +4,7 @@ import (
 	"gin-poc/entity"
 	"gin-poc/services"
 	"gin-poc/validators"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -12,6 +13,7 @@ import (
 type VideoController interface {
 	Save(ctx *gin.Context) error
 	GetAll() []entity.Video
+	ShowAll(ctx *gin.Context)
 }
 
 type videoController struct {
@@ -49,9 +51,11 @@ func (controller *videoController) Save(ctx *gin.Context) error {
 	return nil
 }
 
-// func must(err error) error {
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (controller *videoController) ShowAll(ctx *gin.Context) {
+	videos := controller.service.GetAll()
+	data := gin.H{
+		"title":  "Video Page",
+		"videos": videos,
+	}
+	ctx.HTML(http.StatusOK, "index.html", data)
+}
